@@ -35,13 +35,19 @@ router.post('/search_result', function (req, res, next) {
 
 router.get('/list', function (req, res, next) {
   let sqlquery = "SELECT * FROM books";
+
   db.query(sqlquery, (err, result) => {
     if (err) {
       next(err);
+    } else {
+      res.render('list.ejs', { 
+        availableBooks: result,
+        pageTitle: 'Book List'
+      });
     }
-    res.render("list.ejs", { availableBooks: result });
   });
 });
+
 // Display the Add Book form
 router.get('/addbook', function (req, res, next) {
   res.render('addbook.ejs');
