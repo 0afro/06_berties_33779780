@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Audit Log</title>
+  <link rel="stylesheet" href="/main.css">
+</head>
+<body>
+
+<h1>Audit Log</h1>
+
+<table>
+  <tr>
+    <th>Username</th>
+    <th>Success</th>
+    <th>Time</th>
+  </tr>
+
+  <% logs.forEach(function(entry) { %>
+    <tr>
+      <td><%= entry.username %></td>
+      <td><%= entry.success ? 'Yes' : 'No' %></td>
+      <td><%= entry.time %></td>
+    </tr>
+  <% }) %>
+</table>
+
+</body>
+</html>

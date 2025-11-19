@@ -3,6 +3,8 @@ var mysql = require('mysql2');
 var express = require ('express')
 var ejs = require('ejs')
 const path = require('path')
+require('dotenv').config();
+
 
 // Create the express application object
 const app = express()
@@ -23,15 +25,17 @@ app.locals.shopData = {shopName: "Bertie's Books"}
 
 // Define the database connection pool
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'berties_books_app',
-    password: 'qwertyuiop',
-    database: 'berties_books',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
 });
+
 global.db = db;
+
 
 // Load the route handlers
 const mainRoutes = require("./routes/main")
@@ -44,6 +48,7 @@ app.use('/users', usersRoutes)
 // Load the route handlers for /books
 const booksRoutes = require('./routes/books')
 app.use('/books', booksRoutes)
+
 
 // Start the web app listening
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
