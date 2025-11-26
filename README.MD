@@ -20,3 +20,16 @@ I implemented an audit logging system to record both successful and failed login
 I added access control using session-based authentication. Some pages now require the user to be logged in before they can view them. I restricted access to pages that contain sensitive information or allow changes to the system (such as viewing users, viewing the audit log, listing books, adding books, and viewing bargain books). These now redirect to the login page if the user is not authenticated.
 
 Pages such as the home page, registration page, login page, and the book search pages remain public because they need to be accessible to all users, including those who are not logged in.
+
+
+## Test User for Marking
+
+The required test user has been added to the sql/insert_test_data.sql script so it is automatically created on deployment.
+
+Login details:
+
+Username: gold
+
+Password: smiths
+
+This user is inserted using a bcrypt hash with saltRounds = 10.
