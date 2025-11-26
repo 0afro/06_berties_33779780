@@ -7,7 +7,7 @@ const saltRounds = 10;
 // --- Authorisation helper ---
 const redirectLogin = (req, res, next) => {
     if (!req.session || !req.session.userId) {
-        return res.redirect('login');
+        return res.redirect('users/login');
     }
     next();
 };
