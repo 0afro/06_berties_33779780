@@ -7,7 +7,7 @@ const saltRounds = 10;
 // --- Authorisation helper ---
 const redirectLogin = (req, res, next) => {
     if (!req.session || !req.session.userId) {
-        return res.redirect('/users/login');
+        return res.redirect('./login');
     }
     next();
 };
@@ -66,7 +66,7 @@ router.post('/registered', function (req, res, next) {
                     return res.send("Error inserting user into database");
                 }
 
-                // ✔ Final secure output — no password shown!
+                // Final secure output — no password shown!
                 res.send("Registration complete! Welcome, " + req.body.first + ".");
             });
 
