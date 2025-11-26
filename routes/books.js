@@ -4,7 +4,7 @@ const router = express.Router();
 // Authorisation middleware
 const redirectLogin = (req, res, next) => {
     if (!req.session || !req.session.userId) {
-        return res.redirect('/users/login');
+        return res.redirect('/usr/261/users/login');
     }
     next();
 };
