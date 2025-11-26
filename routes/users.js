@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const { check, validationResult } = require('express-validator');
 
 const saltRounds = 10;
 
-// --- Authorisation helper ---
+// Authorisation helper
 const redirectLogin = (req, res, next) => {
     if (!req.session || !req.session.userId) {
         return res.redirect('/usr/261/users/login');
@@ -24,64 +25,80 @@ router.get('/login', function (req, res, next) {
     res.render('login.ejs');
 });
 
-router.post('/registered', function (req, res, next) {
+// Registration with validation + sanitisation
+router.post('/registered',
+    [
+        check('email').isEmail(),
+        check('username').isLength({ min: 5, max: 20 }),
+        check('password').isLength({ min: 8 })
+    ],
+    function (req, res, next) {
 
-    // First check if email already exists
-    let checkEmailSql = "SELECT email FROM users WHERE email = ?";
-
-    db.query(checkEmailSql, [req.body.email], function(err, results) {
-        if (err) {
-            console.log(err);
-            return res.send("Error checking email");
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.render('register.ejs');
         }
 
-        if (results.length > 0) {
-            return res.send("Error: This email is already registered.");
-        }
+        // Sanitise fields
+        let first = req.sanitize(req.body.first);
+        let last = req.sanitize(req.body.last);
+        let username = req.sanitize(req.body.username);
+        let email = req.sanitize(req.body.email);
+        let plainPassword = req.body.password;
 
-        const plainPassword = req.body.password;
+        // Check if email already exists
+        let checkEmailSql = "SELECT email FROM users WHERE email = ?";
 
-        bcrypt.hash(plainPassword, saltRounds, function(err, hashedPassword) {
+        db.query(checkEmailSql, [email], function (err, results) {
             if (err) {
-                return res.send("Error hashing password");
+                console.log(err);
+                return res.send("Error checking email");
             }
 
-            let sql = `
-                INSERT INTO users 
-                (username, first_name, last_name, email, hashedPassword)
-                VALUES (?, ?, ?, ?, ?)
-            `;
+            if (results.length > 0) {
+                return res.send("Error: This email is already registered.");
+            }
 
-            let values = [
-                req.body.username,
-                req.body.first,
-                req.body.last,
-                req.body.email,
-                hashedPassword
-            ];
+            bcrypt.hash(plainPassword, saltRounds, function (err, hashedPassword) {
 
-            db.query(sql, values, function(err, result) {
                 if (err) {
-                    console.log(err);
-                    return res.send("Error inserting user into database");
+                    return res.send("Error hashing password");
                 }
 
-                // Final secure output — no password shown!
-                res.send("Registration complete! Welcome, " + req.body.first + ".");
+                let sql = `
+                    INSERT INTO users 
+                    (username, first_name, last_name, email, hashedPassword)
+                    VALUES (?, ?, ?, ?, ?)
+                `;
+
+                let values = [
+                    username,
+                    first,
+                    last,
+                    email,
+                    hashedPassword
+                ];
+
+                db.query(sql, values, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                        return res.send("Error inserting user into database");
+                    }
+
+                    res.send("Registration complete! Welcome, " + first + ".");
+                });
+
             });
 
         });
-
-    });
-});
-
-
+    }
+);
 
 // ------------------ LOGIN LOGIC ------------------
 
 router.post('/loggedin', function (req, res, next) {
 
-    let username = req.body.username;
+    let username = req.sanitize(req.body.username);
     let password = req.body.password;
 
     let sql = "SELECT hashedPassword FROM users WHERE username = ?";
@@ -92,12 +109,9 @@ router.post('/loggedin', function (req, res, next) {
             return res.send("Database error during login");
         }
 
-        // Username not found
         if (result.length === 0) {
-
             let logSql = "INSERT INTO audit_log (username, success) VALUES (?, ?)";
             db.query(logSql, [username, false]);
-
             return res.send("Login failed: username not found");
         }
 
@@ -115,7 +129,6 @@ router.post('/loggedin', function (req, res, next) {
                 let logSql = "INSERT INTO audit_log (username, success) VALUES (?, ?)";
                 db.query(logSql, [username, true]);
 
-                // SAVE SESSION
                 req.session.userId = username;
 
                 return res.send("Login successful! Welcome back, " + username + ".");
@@ -131,7 +144,6 @@ router.post('/loggedin', function (req, res, next) {
         });
     });
 });
-
 
 // ------------------ PROTECTED ROUTES ------------------
 
@@ -150,7 +162,7 @@ router.get('/list', redirectLogin, function (req, res, next) {
     });
 });
 
-// Audit log – MUST be protected
+// Audit page (also protected)
 router.get('/audit', redirectLogin, function (req, res, next) {
 
     let sql = "SELECT username, success, time FROM audit_log ORDER BY time DESC";

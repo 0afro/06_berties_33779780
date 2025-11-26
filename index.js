@@ -10,7 +10,7 @@ require('dotenv').config();
 const app = express();
 const port = 8000;
 
-// Body parser
+// Body parser FIRST
 app.use(express.urlencoded({ extended: true }));
 
 // Tell Express that we want to use EJS as the templating engine
@@ -22,7 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Define our application-specific data
 app.locals.shopData = { shopName: "Bertie's Books" };
 
-// Define the database connection pool (USING BB_ VARS)
+// Define the database connection pool
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -35,15 +35,23 @@ const db = mysql.createPool({
 
 global.db = db;
 
-// Create a session
+// Create session MIDDLEWARE
 app.use(session({
     secret: 'somerandomstuff',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        expires: 600000
-    }
+    cookie: { expires: 600000 }
 }));
+
+// NOW add express-sanitizer AFTER session
+const expressSanitizer = require('express-sanitizer');
+app.use(expressSanitizer());
+
+// Make session available to EJS (needed for login/logout buttons)
+app.use((req, res, next) => {
+    res.locals.session = req.session;
+    next();
+});
 
 // Load the route handlers
 const mainRoutes = require("./routes/main");
