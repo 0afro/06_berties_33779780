@@ -33,3 +33,33 @@ Username: gold
 Password: smiths
 
 This user is inserted using a bcrypt hash with saltRounds = 10.
+
+
+## API Documentation
+
+### GET /api/books
+Returns all books in JSON format.
+
+### Query Parameters
+
+#### search
+Filter books by keyword in name.
+Example:
+- /api/books?search=sigma
+
+#### minprice & maxprice
+Filter books by a price range.
+Example:
+- /api/books?minprice=5&maxprice=20
+
+#### sort
+Sort results by name or price.
+Examples:
+- /api/books?sort=name
+- /api/books?sort=price
+
+### Full Examples
+- /api/books
+- /api/books?search=world
+- /api/books?minprice=5&maxprice=10
+- /api/books?sort=name
